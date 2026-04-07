@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NodeControl — ESP32 Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #091428;
+      --bg-2:      #060e1e;
+      --bg-panel:  #0d1f45;
+      --bg-card:   #0f2358;
+      --bg-card-2: #0b1a3c;
+      --blue:      #1e6fff;
+      --blue-lt:   #4d8fff;
+      --cyan:      #00e5ff;
+      --cyan-dim:  rgba(0,229,255,0.12);
+      --green:     #00e676;
+      --green-dim: rgba(0,230,118,0.15);
+      --amber:     #ffab40;
+      --red:       #ff5252;
+      --text:      #ddeaff;
+      --text-2:    #6b88c8;
+      --text-3:    #2f4680;
+      --border:    rgba(80,120,255,0.11);
+      --border-hi: rgba(80,120,255,0.28);
+      --r:         10px; --r-sm: 6px;
+      --font-ui:   'Exo 2', sans-serif;
+      --font-head: 'Rajdhani', sans-serif;
+      --font-mono: 'Share Tech Mono', monospace;
+    }
+    html,body { height:100%; background:var(--bg-2); color:var(--text); font-family:var(--font-ui); font-size:13px; overflow-x:hidden; }
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image: linear-gradient(rgba(30,111,255,0.025) 1px,transparent 1px), linear-gradient(90deg,rgba(30,111,255,0.025) 1px,transparent 1px);
+      background-size: 36px 36px;
+    }
+
+    /* BOOT */
+    #bootScreen { position:fixed; inset:0; z-index:500; background:var(--bg-2); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; transition:opacity .6s ease; }
+    #bootScreen.gone { opacity:0; pointer-events:none; }
+    .boot-logo { font-family:var(--font-head); font-size:28px; font-weight:700; letter-spacing:4px; color:var(--cyan); text-shadow:0 0 30px rgba(0,229,255,.4); }
+    .boot-bar-outer { width:200px; height:3px; background:var(--border); border-radius:99px; overflow:hidden; }
+    .boot-bar-fill { height:100%; width:0; background:linear-gradient(to right,var(--blue),var(--cyan)); border-radius:99px; animation:bootLoad 1.5s cubic-bezier(.4,0,.2,1) forwards; }
+    .boot-msg { font-family:var(--font-mono); font-size:11px; color:var(--text-3); }
+
+    /* APP */
+    .app { position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; padding-bottom:28px; animation:fadeIn .6s ease both; }
+
+    /* TOPBAR */
+    .topbar { display:flex; align-items:center; justify-content:space-between; padding:12px 24px; background:var(--bg-panel); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .brand-hex { width:32px; height:32px; background:linear-gradient(135deg,var(--blue),var(--cyan)); clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%); display:flex; align-items:center; justify-content:center; }
+    .brand-hex svg { width:14px; height:14px; stroke:#fff; fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
+    .brand-name { font-family:var(--font-head); font-size:20px; font-weight:700; letter-spacing:2px; }
+    .brand-name span { color:var(--cyan); }
+    .topbar-center { display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:11px; color:var(--text-3); }
+    .live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); animation:pulse 2s ease-in-out infinite; }
+    .topbar-right { display:flex; align-items:center; gap:10px; }
+    .stat-pill { display:flex; align-items:center; gap:7px; padding:5px 12px; background:var(--bg-card-2); border:1px solid var(--border); border-radius:99px; font-size:11px; color:var(--text-2); }
+    .stat-pill strong { color:var(--text); font-weight:600; }
+    .clock { font-family:var(--font-mono); font-size:13px; color:var(--cyan); padding:5px 14px; background:var(--bg-card-2); border:1px solid var(--border-hi); border-radius:99px; }
+
+    /* PAGE HEADER */
+    .page-header { padding:18px 24px 0; display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+    .page-header h1 { font-family:var(--font-head); font-size:clamp(18px,2.5vw,26px); font-weight:700; letter-spacing:1px; }
+    .page-header p  { font-size:11px; color:var(--text-3); margin-top:2px; }
+    .last-sync { font-family:var(--font-mono); font-size:11px; color:var(--text-3); }
+
+    /* MAIN GRID — 3 columns */
+    .main-grid { padding:16px 24px 0; display:grid; gap:14px; grid-template-columns:250px 1fr 210px; }
+    @media(max-width:1000px){ .main-grid{grid-template-columns:1fr 1fr;} .col-right{grid-column:1/-1;} }
+    @media(max-width:650px) { .main-grid{grid-template-columns:1fr;} }
+
+    /* PANEL */
+    .panel { background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--r); padding:16px 18px; position:relative; overflow:hidden; transition:border-color .25s; }
+    .panel::after { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(to right,var(--blue),var(--cyan)); opacity:.45; }
+    .panel:hover { border-color:var(--border-hi); }
+    .col-left,.col-center,.col-right { display:flex; flex-direction:column; gap:14px; }
+
+    .ptitle { font-family:var(--font-head); font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-2); margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+    .ptitle::before { content:''; width:3px; height:12px; background:var(--cyan); border-radius:2px; flex-shrink:0; }
+
+    /* ── LEFT: Controls ── */
+    .toggle-block { background:var(--bg-card-2); border:1px solid var(--border); border-radius:var(--r-sm); padding:14px; display:flex; flex-direction:column; gap:14px; }
+    .toggle-row { display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+    .toggle-info .tname { font-size:14px; font-weight:600; color:var(--text); }
+    .toggle-info .tsub  { font-size:10px; color:var(--text-3); margin-top:2px; }
+    .toggle-switch { width:48px; height:25px; border-radius:99px; background:var(--text-3); border:1px solid var(--border); position:relative; cursor:pointer; flex-shrink:0; transition:background .3s,box-shadow .3s; }
+    .toggle-switch.on { background:var(--green); box-shadow:0 0 14px var(--green-dim); }
+    .toggle-knob { position:absolute; top:3px; left:3px; width:17px; height:17px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.3); transition:transform .3s cubic-bezier(.4,0,.2,1); }
+    .toggle-switch.on .toggle-knob { transform:translateX(23px); }
+    .btn-pair { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .btn { padding:10px 0; border-radius:var(--r-sm); font-family:var(--font-head); font-size:13px; font-weight:600; letter-spacing:1px; border:1px solid transparent; cursor:pointer; transition:all .2s; }
+    .btn:hover { transform:translateY(-1px); filter:brightness(1.15); }
+    .btn-on  { background:rgba(0,230,118,.1); color:var(--green); border-color:rgba(0,230,118,.25); }
+    .btn-off { background:rgba(255,82,82,.08); color:var(--red);   border-color:rgba(255,82,82,.2); }
+
+    .metrics-stack { display:flex; flex-direction:column; gap:7px; }
+    .metric-row { display:flex; align-items:center; justify-content:space-between; padding:9px 12px; background:var(--bg-card-2); border:1px solid var(--border); border-radius:var(--r-sm); }
+    .metric-key { font-size:11px; color:var(--text-2); }
+    .metric-val { font-family:var(--font-mono); font-size:14px; color:var(--cyan); }
+
+    .net-nodes { display:flex; flex-direction:column; gap:8px; }
+    .net-node { display:flex; align-items:center; gap:9px; padding:9px 12px; background:var(--bg-card-2); border:1px solid var(--border); border-radius:var(--r-sm); }
+    .ndot { width:8px; height:8px; border-radius:50%; background:var(--text-3); flex-shrink:0; transition:all .4s; }
+    .ndot.live { background:var(--green); box-shadow:0 0 8px rgba(0,230,118,.45); animation:pulse 2s ease-in-out infinite; }
+    .ndot.err  { background:var(--red); }
+    .net-node-info { flex:1; }
+    .net-node-name { font-size:12px; font-weight:600; color:var(--text); }
+    .net-node-sub  { font-size:10px; color:var(--text-3); margin-top:1px; }
+    .nbadge { font-family:var(--font-mono); font-size:10px; padding:2px 8px; border-radius:99px; background:var(--bg-card); border:1px solid var(--border); color:var(--text-3); }
+    .sweep-track { height:2px; background:var(--bg-card-2); border-radius:99px; overflow:hidden; margin-top:10px; }
+    .sweep-fill { height:100%; width:0; background:linear-gradient(to right,transparent,var(--cyan),transparent); animation:sweep 3s ease-in-out infinite; }
+
+    /* ── CENTER: Status ── */
+    .status-card { display:flex; flex-direction:column; align-items:center; padding:24px 18px; gap:18px; }
+
+    .orb-wrap { position:relative; width:136px; height:136px; display:flex; align-items:center; justify-content:center; }
+    .orb-ring-o { position:absolute; inset:0; border-radius:50%; border:1px solid rgba(80,120,255,.2); animation:orbSpin 14s linear infinite; }
+    .orb-ring-o::before { content:''; position:absolute; width:9px; height:9px; background:var(--blue-lt); border-radius:50%; top:-4px; left:50%; transform:translateX(-50%); transition:background .4s,box-shadow .4s; }
+    .orb-ring-i { position:absolute; width:96px; height:96px; border-radius:50%; border:1px solid rgba(0,229,255,.12); animation:orbSpin 8s linear infinite reverse; }
+    .orb-ring-i::before { content:''; position:absolute; width:6px; height:6px; background:var(--cyan); border-radius:50%; top:-3px; left:50%; transform:translateX(-50%); opacity:.65; }
+    #reticle { display:contents; }
+    .orb-core { width:70px; height:70px; border-radius:50%; background:var(--bg-card-2); border:1.5px solid var(--border-hi); display:flex; align-items:center; justify-content:center; position:relative; z-index:2; transition:all .5s ease; }
+    #reticle.on .orb-core { background:rgba(0,230,118,.07); border-color:var(--green); box-shadow:0 0 30px rgba(0,230,118,.28),inset 0 0 16px rgba(0,230,118,.04); }
+    #reticle.on .orb-ring-o { border-color:rgba(0,230,118,.25); }
+    #reticle.on .orb-ring-o::before { background:var(--green); box-shadow:0 0 8px var(--green); }
+    #reticle.on .orb-ring-i { border-color:rgba(0,230,118,.15); }
+    .orb-ico { opacity:.35; transition:opacity .5s,filter .5s; }
+    .orb-ico svg { width:22px; height:22px; stroke:var(--text); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    #reticle.on .orb-ico { opacity:1; filter:drop-shadow(0 0 6px var(--green)); }
+    #reticle.on .orb-ico svg { stroke:var(--green); }
+
+    .status-info { text-align:center; }
+    .status-code { font-family:var(--font-head); font-size:34px; font-weight:700; letter-spacing:2px; transition:color .4s,text-shadow .4s; }
+    .status-code.on  { color:var(--green); text-shadow:0 0 22px rgba(0,230,118,.45); }
+    .status-code.off { color:var(--text-3); }
+    .status-detail { font-size:12px; color:var(--text-2); margin-top:4px; }
+
+    .out-row { width:100%; display:flex; flex-direction:column; gap:8px; }
+    .out-label { display:flex; justify-content:space-between; font-size:11px; color:var(--text-2); }
+    .out-label span:last-child { font-family:var(--font-mono); color:var(--text-3); }
+    .out-bar-outer { height:7px; background:var(--bg-card-2); border:1px solid var(--border); border-radius:99px; overflow:hidden; }
+    .out-fill { height:100%; width:15%; border-radius:99px; transition:width .7s cubic-bezier(.4,0,.2,1),background .4s; background:var(--text-3); }
+    .out-fill.on { width:85%; background:linear-gradient(to right,var(--blue),var(--green)); }
+
+    /* Donut */
+    .donut-wrap { display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap; }
+    .donut-cvs-wrap { position:relative; width:120px; height:120px; }
+    .donut-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .donut-pct { font-family:var(--font-head); font-size:20px; font-weight:700; color:var(--text); transition:color .4s; }
+    .donut-pct.on { color:var(--green); }
+    .donut-sub { font-size:10px; color:var(--text-3); }
+    .donut-legend { display:flex; flex-direction:column; gap:9px; }
+    .leg-item { display:flex; align-items:center; gap:7px; }
+    .leg-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+    .leg-text { font-size:11px; color:var(--text-2); }
+    .leg-val { font-family:var(--font-mono); font-size:11px; margin-left:auto; padding-left:10px; color:var(--text); }
+
+    /* Spark */
+    .chart-wrap { width:100%; height:90px; position:relative; }
+
+    /* ── RIGHT ── */
+    .signal-visual { display:flex; flex-direction:column; gap:12px; }
+    .sig-bars-wrap { display:flex; align-items:flex-end; justify-content:center; gap:5px; height:44px; }
+    .sig-bar { width:14px; border-radius:3px 3px 0 0; background:var(--text-3); transition:background .4s,box-shadow .4s; }
+    .sig-bar:nth-child(1){height:20%} .sig-bar:nth-child(2){height:40%} .sig-bar:nth-child(3){height:60%} .sig-bar:nth-child(4){height:80%} .sig-bar:nth-child(5){height:100%}
+    .sig-bars-wrap.active .sig-bar { background:var(--cyan); box-shadow:0 0 8px rgba(0,229,255,.28); }
+    .sig-label { text-align:center; font-family:var(--font-head); font-size:12px; letter-spacing:1px; color:var(--text-3); }
+
+    .rank-list { display:flex; flex-direction:column; gap:9px; }
+    .rank-item { display:flex; flex-direction:column; gap:5px; }
+    .rank-top { display:flex; justify-content:space-between; font-size:11px; color:var(--text-2); }
+    .rank-val { font-family:var(--font-mono); color:var(--text); }
+    .rank-bar-outer { height:4px; background:var(--bg-card-2); border-radius:99px; overflow:hidden; }
+    .rank-bar-fill { height:100%; border-radius:99px; background:linear-gradient(to right,var(--blue),var(--cyan)); }
+
+    .log-box { background:var(--bg-2); border:1px solid var(--border); border-radius:var(--r-sm); height:130px; overflow-y:auto; padding:9px 11px; }
+    .log-box::-webkit-scrollbar{width:3px} .log-box::-webkit-scrollbar-thumb{background:var(--border-hi);border-radius:99px}
+    .log-entry { font-family:var(--font-mono); font-size:10px; line-height:1.9; color:var(--text-3); }
+    .log-entry .ts { color:var(--text-3); margin-right:6px; opacity:.55; }
+    .log-entry.ok  { color:var(--green); }
+    .log-entry.err { color:var(--red); }
+
+    /* FOOTER */
+    footer { margin:16px 24px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; padding-top:12px; border-top:1px solid var(--border); font-family:var(--font-mono); font-size:10px; color:var(--text-3); }
+
+    @keyframes fadeIn   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    @keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:.35} }
+    @keyframes orbSpin  { to{transform:rotate(360deg)} }
+    @keyframes sweep    { 0%{width:0;margin-left:0} 50%{width:55%;margin-left:45%} 100%{width:0;margin-left:100%} }
+    @keyframes bootLoad { 0%{width:0} 100%{width:100%} }
+  </style>
+</head>
+<body>
+
+<div id="bootScreen">
+  <div class="boot-logo">NODE CONTROL</div>
+  <div class="boot-bar-outer"><div class="boot-bar-fill"></div></div>
+  <div class="boot-msg">INITIALIZING SUPABASE LINK...</div>
+</div>
+
+<div class="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-hex">
+        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="brand-name">EBELEN<span>LED</span></div>
+    </div>
+    <div class="topbar-center">
+      <div class="live-dot"></div>
+      ESP32 · Supabase Real-Time · Auto-poll 3s
+    </div>
+    <div class="topbar-right">
+      <div class="stat-pill">Polls <strong id="topPoll">000</strong></div>
+      <div class="stat-pill">Cmds <strong id="topCmd">000</strong></div>
+      <div class="clock" id="liveClock">00:00:00</div>
+    </div>
+  </div>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div>
+      <h1>SEBEN EBELEN</h1>
+      <p>ESP32 Built-in LED · Supabase Backend · Real-Time Monitoring</p>
+    </div>
+    <div class="last-sync" id="lastSync">Last sync: —</div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: Controls -->
+    <div class="col-left">
+
+      <div class="panel">
+        <div class="ptitle">LED Control</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="toggle-block">
+            <div class="toggle-row" onclick="handleToggle()">
+              <div class="toggle-info">
+                <div class="tname">LED Power</div>
+                <div class="tsub">Built-in GPIO LED</div>
+              </div>
+              <div class="toggle-switch" id="toggleSw"><div class="toggle-knob"></div></div>
+            </div>
+          </div>
+          <div class="btn-pair">
+            <button class="btn btn-on"  onclick="setLed(true)">▶ ACTIVATE</button>
+            <button class="btn btn-off" onclick="setLed(false)">■ KILL</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">Session Metrics</div>
+        <div class="metrics-stack">
+          <div class="metric-row"><span class="metric-key">Total Polls</span><span class="metric-val" id="statPoll">000</span></div>
+          <div class="metric-row"><span class="metric-key">Commands Sent</span><span class="metric-val" id="statToggle">000</span></div>
+          <div class="metric-row"><span class="metric-key">Uptime</span><span class="metric-val" id="statUptime">0s</span></div>
+          <div class="metric-row"><span class="metric-key">Poll Interval</span><span class="metric-val">3000ms</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">Network</div>
+        <div class="net-nodes">
+          <div class="net-node">
+            <div class="ndot" id="dotSupabase"></div>
+            <div class="net-node-info">
+              <div class="net-node-name">Supabase DB</div>
+              <div class="net-node-sub">PostgreSQL · REST API</div>
+            </div>
+            <div class="nbadge" id="supaStatus">WAIT</div>
+          </div>
+          <div class="net-node">
+            <div class="ndot live"></div>
+            <div class="net-node-info">
+              <div class="net-node-name">Dashboard</div>
+              <div class="net-node-sub">Browser · WebUI</div>
+            </div>
+            <div class="nbadge" style="color:var(--green)">LIVE</div>
+          </div>
+          <div class="net-node">
+            <div class="ndot" id="dotSync"></div>
+            <div class="net-node-info">
+              <div class="net-node-name">Sync Status</div>
+              <div class="net-node-sub" id="syncText">Initializing…</div>
+            </div>
+          </div>
+        </div>
+        <div class="sweep-track"><div class="sweep-fill"></div></div>
+      </div>
+
+    </div>
+
+    <!-- CENTER: Status (main focus) -->
+    <div class="col-center">
+
+      <div class="panel status-card">
+        <div class="ptitle" style="align-self:flex-start;">Node Status</div>
+        <div class="orb-wrap">
+          <div id="reticle">
+            <div class="orb-ring-o"></div>
+            <div class="orb-ring-i"></div>
+            <div class="orb-core">
+              <div class="orb-ico">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="status-info">
+          <div class="status-code off" id="statusCode">STANDBY</div>
+          <div class="status-detail" id="statusDetail">Built-in LED node is INACTIVE</div>
+        </div>
+        <div class="out-row">
+          <div class="out-label"><span>Output Level</span><span id="outPctLabel">15%</span></div>
+          <div class="out-bar-outer"><div class="out-fill" id="threatFill"></div></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">State Distribution</div>
+        <div class="donut-wrap">
+          <div class="donut-cvs-wrap">
+            <canvas id="donutChart" width="120" height="120"></canvas>
+            <div class="donut-center">
+              <div class="donut-pct" id="donutPct">0%</div>
+              <div class="donut-sub">Online</div>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <div class="leg-item"><div class="leg-dot" style="background:var(--green)"></div><span class="leg-text">Online cycles</span><span class="leg-val" id="legOn">0</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:var(--text-3)"></div><span class="leg-text">Standby cycles</span><span class="leg-val" id="legOff">0</span></div>
+            <div class="leg-item"><div class="leg-dot" style="background:var(--blue)"></div><span class="leg-text">Commands</span><span class="leg-val" id="legCmd">0</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">Poll Activity (Live)</div>
+        <div class="chart-wrap"><canvas id="sparkChart"></canvas></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-right">
+
+      <div class="panel">
+        <div class="ptitle">Signal Strength</div>
+        <div class="signal-visual">
+          <div class="sig-bars-wrap" id="signalBars">
+            <div class="sig-bar"></div><div class="sig-bar"></div><div class="sig-bar"></div><div class="sig-bar"></div><div class="sig-bar"></div>
+          </div>
+          <div class="sig-label" id="signalLabel">NO SIGNAL</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">Interface Rank</div>
+        <div class="rank-list">
+          <div class="rank-item">
+            <div class="rank-top"><span>LED Control</span><span class="rank-val">100</span></div>
+            <div class="rank-bar-outer"><div class="rank-bar-fill" style="width:100%;background:linear-gradient(to right,var(--green),var(--cyan))"></div></div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-top"><span>Supabase REST</span><span class="rank-val" id="rankPoll">0</span></div>
+            <div class="rank-bar-outer"><div class="rank-bar-fill" id="rankPollBar" style="width:0%"></div></div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-top"><span>PATCH Commands</span><span class="rank-val" id="rankCmd">0</span></div>
+            <div class="rank-bar-outer"><div class="rank-bar-fill" id="rankCmdBar" style="width:0%;background:linear-gradient(to right,var(--amber),var(--red))"></div></div>
+          </div>
+          <div class="rank-item">
+            <div class="rank-top"><span>Dashboard UI</span><span class="rank-val">99</span></div>
+            <div class="rank-bar-outer"><div class="rank-bar-fill" style="width:99%;background:linear-gradient(to right,var(--blue),var(--blue-lt))"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1;">
+        <div class="ptitle">Activity Log</div>
+        <div class="log-box">
+          <div id="logContainer">
+            <div class="log-entry"><span class="ts">[BOOT]</span> NodeControl dashboard loaded.</div>
+            <div class="log-entry"><span class="ts">[INIT]</span> Connecting to Supabase…</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ptitle">Device Info</div>
+        <div class="metrics-stack">
+          <div class="metric-row"><span class="metric-key">Device</span><span class="metric-val" style="font-size:11px;color:var(--text-2)">ESP32 DevKit</span></div>
+          <div class="metric-row"><span class="metric-key">Backend</span><span class="metric-val" style="font-size:11px;color:var(--text-2)">Supabase</span></div>
+          <div class="metric-row"><span class="metric-key">Table</span><span class="metric-val" style="font-size:11px;color:var(--text-2)">device_control</span></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- end main-grid -->
+
+  <footer>
+    <span>ESP32 · Supabase · ESP-IDF</span>
+    <span>Auto-refresh: 3000ms</span>
+    <span id="footerStatus">STATUS: INITIALIZING</span>
+  </footer>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://oqeucwpbovszthusqddx.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xZXVjd3Bib3ZzenRodXNxZGR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5Mjk5NjIsImV4cCI6MjA5MDUwNTk2Mn0.MxF9CKcFq-FD-DBAP8AMkg62d8f1G7rl39gzOOvC2qU";
+  const TABLE = "device_control", POLL_MS = 3000;
+
+  let currentStatus=false, isUpdating=false, pollCount=0, toggleCount=0;
+  let onCount=0, offCount=0, startTime=Date.now(), sparkData=Array(20).fill(0);
+
+  const reticle=document.getElementById('reticle'), statusCode=document.getElementById('statusCode'), 
+        statusDet=document.getElementById('statusDetail'), toggleSw=document.getElementById('toggleSw'),
+        logCont=document.getElementById('logContainer'), dotSupa=document.getElementById('dotSupabase'),
+        dotSync=document.getElementById('dotSync'), syncTxt=document.getElementById('syncText'),
+        sigBars=document.getElementById('signalBars'), sigLabel=document.getElementById('signalLabel'),
+        outFill=document.getElementById('threatFill'), outPctLabel=document.getElementById('outPctLabel');
+
+  setInterval(()=>{ document.getElementById('liveClock').textContent=new Date().toLocaleTimeString('en-US',{hour12:false}); },1000);
+
+  // Donut
+  const donutCtx=document.getElementById('donutChart').getContext('2d');
+  const donutChart=new Chart(donutCtx,{
+    type:'doughnut',
+    data:{ labels:['Online','Standby','Commands'], datasets:[{ data:[0,1,0], backgroundColor:['#00e676','#2f4680','#1e6fff'], borderColor:'#0d1f45', borderWidth:3 }] },
+    options:{ cutout:'70%', plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{duration:500} }
+  });
+
+  // Spark
+  const sparkCtx=document.getElementById('sparkChart').getContext('2d');
+  const sparkChart=new Chart(sparkCtx,{
+    type:'line',
+    data:{ labels:sparkData.map((_,i)=>i), datasets:[{ data:sparkData, fill:true, borderColor:'#1e6fff', borderWidth:2,
+      backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,90); g.addColorStop(0,'rgba(30,111,255,.28)'); g.addColorStop(1,'rgba(30,111,255,0)'); return g; },
+      tension:.4, pointRadius:0 }] },
+    options:{ responsive:true, maintainAspectRatio:false, scales:{x:{display:false},y:{display:false,min:0,max:5}}, plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{duration:400} }
+  });
+
+  const hdrs=()=>({ "apikey":SUPABASE_KEY, "Authorization":`Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json", "Prefer":"return=minimal" });
+  const ts=()=>new Date().toLocaleTimeString('en-US',{hour12:false});
+
+  function addLog(msg,type=''){
+    const el=document.createElement('div'); el.className='log-entry '+type;
+    el.innerHTML=`<span class="ts">[${ts()}]</span> ${msg}`;
+    logCont.appendChild(el); logCont.parentElement.scrollTop=logCont.parentElement.scrollHeight;
+    while(logCont.children.length>40) logCont.removeChild(logCont.firstChild);
+  }
+
+  function updateCharts(){
+    donutChart.data.datasets[0].data=[onCount,offCount,toggleCount]; donutChart.update('none');
+    document.getElementById('legOn').textContent=onCount;
+    document.getElementById('legOff').textContent=offCount;
+    document.getElementById('legCmd').textContent=toggleCount;
+    const total=onCount+offCount||1, pct=Math.round(onCount/total*100);
+    const dp=document.getElementById('donutPct'); dp.textContent=pct+'%'; dp.className='donut-pct'+(currentStatus?' on':'');
+    sparkData.push(currentStatus?3+Math.random()*2:Math.random()*.6);
+    if(sparkData.length>20) sparkData.shift();
+    sparkChart.data.datasets[0].data=[...sparkData]; sparkChart.update('none');
+    const mxP=Math.max(pollCount,1);
+    document.getElementById('rankPoll').textContent=pollCount;
+    document.getElementById('rankPollBar').style.width=Math.min(100,pollCount/mxP*100)+'%';
+    document.getElementById('rankCmd').textContent=toggleCount;
+    document.getElementById('rankCmdBar').style.width=Math.min(100,toggleCount/Math.max(pollCount,1)*100)+'%';
+    document.getElementById('topPoll').textContent=String(pollCount).padStart(3,'0');
+    document.getElementById('topCmd').textContent=String(toggleCount).padStart(3,'0');
+  }
+
+  function updateUI(status){
+    currentStatus=status;
+    if(status){
+      onCount++; reticle.classList.add('on');
+      statusCode.textContent='ONLINE'; statusCode.className='status-code on';
+      statusDet.textContent='Built-in LED node is ACTIVE';
+      toggleSw.classList.add('on'); sigBars.classList.add('active');
+      sigLabel.textContent='SIGNAL OK'; outFill.className='out-fill on'; outPctLabel.textContent='85%';
+      document.getElementById('footerStatus').textContent='STATUS: ARMED';
+    } else {
+      offCount++; reticle.classList.remove('on');
+      statusCode.textContent='STANDBY'; statusCode.className='status-code off';
+      statusDet.textContent='Built-in LED node is INACTIVE';
+      toggleSw.classList.remove('on'); sigBars.classList.remove('active');
+      sigLabel.textContent='NO SIGNAL'; outFill.className='out-fill'; outPctLabel.textContent='15%';
+      document.getElementById('footerStatus').textContent='STATUS: STANDBY';
+    }
+    updateCharts();
+  }
+
+  function updateStats(){
+    document.getElementById('statPoll').textContent=String(pollCount).padStart(3,'0');
+    document.getElementById('statToggle').textContent=String(toggleCount).padStart(3,'0');
+    const e=Math.floor((Date.now()-startTime)/1000);
+    document.getElementById('statUptime').textContent=e>=60?`${Math.floor(e/60)}m ${e%60}s`:`${e}s`;
+  }
+
+  async function fetchStatus(){
+    dotSync.className='ndot'; syncTxt.textContent='Polling…';
+    try{
+      const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.1&select=led_status`,{headers:hdrs()});
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d=await r.json(), status=d[0]?.led_status??false;
+      pollCount++; updateUI(status); updateStats();
+      dotSupa.className='ndot live'; document.getElementById('supaStatus').textContent='OK';
+      document.getElementById('supaStatus').style.color='var(--green)';
+      dotSync.className='ndot live'; syncTxt.textContent=`Synced ${ts()}`;
+      document.getElementById('lastSync').textContent=`Last sync: ${ts()}`;
+    } catch(e){
+      dotSync.className='ndot err'; dotSupa.className='ndot err';
+      document.getElementById('supaStatus').textContent='ERR';
+      document.getElementById('supaStatus').style.color='var(--red)';
+      syncTxt.textContent='Connection failed'; addLog(`Fetch failed: ${e.message}`,'err');
+    }
+  }
+
+  async function setLed(val){
+    if(isUpdating) return; isUpdating=true; addLog(`CMD → led_status = ${val}`);
+    try{
+      const r=await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.1`,{method:'PATCH',headers:hdrs(),body:JSON.stringify({led_status:val})});
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      toggleCount++; updateUI(val); updateStats(); addLog(`ACK → LED ${val?'ACTIVATED':'DEACTIVATED'} ✓`,'ok');
+    } catch(e){ addLog(`Command failed: ${e.message}`,'err'); }
+    finally{ isUpdating=false; }
+  }
+
+  function handleToggle(){ setLed(!currentStatus); }
+
+  async function init(){
+    addLog('Handshake with Supabase endpoint…');
+    await fetchStatus(); addLog('Connection established. Polling active.','ok');
+    document.getElementById('bootScreen').classList.add('gone');
+    setInterval(fetchStatus,POLL_MS); setInterval(updateStats,1000);
+  }
+  init();
+</script>
+</body>
+</html>
