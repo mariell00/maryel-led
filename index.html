@@ -9,111 +9,108 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:        #0a0a0f;
-      --bg-card:   #111118;
-      --bg-card2:  #16161f;
-      --border:    rgba(255,255,255,0.07);
-      --border-hi: rgba(255,255,255,0.14);
-      --accent:    #7c6fff;
-      --accent2:   #a78bfa;
-      --green:     #34d399;
-      --green-dim: rgba(52,211,153,0.12);
-      --red:       #f87171;
-      --amber:     #fbbf24;
-      --text:      #f1f0ff;
-      --text-2:    #8b8aa0;
-      --text-3:    #3d3c52;
+      --bg:        #f4f3f0;
+      --bg-card:   #ffffff;
+      --bg-card2:  #f9f8f6;
+      --border:    rgba(0,0,0,0.08);
+      --border-hi: rgba(0,0,0,0.14);
+      --accent:    #5b4fff;
+      --accent2:   #8b74ff;
+      --green:     #16a060;
+      --green-bg:  #eaf5ef;
+      --green-dim: rgba(22,160,96,0.10);
+      --red:       #d94040;
+      --red-bg:    #fceaea;
+      --amber:     #c97a10;
+      --text:      #1a1a1a;
+      --text-2:    #6b6a75;
+      --text-3:    #b0afc0;
       --mono:      'JetBrains Mono', monospace;
       --sans:      'Inter', sans-serif;
-      --r:         14px;
-      --r-sm:      9px;
+      --r:         12px;
+      --r-sm:      8px;
+      --shadow:    0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
     }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; overflow-x: hidden; }
-
-    /* subtle noise grain */
-    body::before {
-      content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .018;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 200px;
-    }
 
     /* SPLASH */
     #splash { position: fixed; inset: 0; z-index: 500; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; transition: opacity .5s ease; }
     #splash.gone { opacity: 0; pointer-events: none; }
-    .splash-icon { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--green)); display: flex; align-items: center; justify-content: center; }
+    .splash-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-md); }
     .splash-icon svg { width: 24px; height: 24px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .splash-title { font-size: 15px; font-weight: 600; color: var(--text-2); letter-spacing: 3px; text-transform: uppercase; }
+    .splash-title { font-size: 14px; font-weight: 600; color: var(--text-2); letter-spacing: 2px; text-transform: uppercase; }
     .splash-bar { width: 160px; height: 2px; background: var(--border); border-radius: 99px; overflow: hidden; }
-    .splash-bar-fill { height: 100%; width: 0; background: linear-gradient(to right, var(--accent), var(--green)); border-radius: 99px; animation: splashLoad 1.6s cubic-bezier(.4,0,.2,1) forwards; }
+    .splash-bar-fill { height: 100%; width: 0; background: var(--accent); border-radius: 99px; animation: splashLoad 1.6s cubic-bezier(.4,0,.2,1) forwards; }
 
     /* APP SHELL */
     .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; animation: fadeIn .5s ease both; }
 
     /* NAV */
-    nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; border-bottom: 1px solid var(--border); }
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
     .nav-logo { display: flex; align-items: center; gap: 10px; }
-    .nav-logo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px rgba(124,111,255,.6); }
-    .nav-logo-text { font-size: 14px; font-weight: 600; letter-spacing: .5px; }
-    .nav-logo-text span { color: var(--accent2); }
-    .nav-meta { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--text-3); }
-    .live-pill { display: flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 99px; color: var(--green); font-size: 11px; }
+    .nav-logo-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
+    .nav-logo-icon svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-logo-text { font-size: 14px; font-weight: 600; color: var(--text); letter-spacing: .3px; }
+    .nav-logo-text span { color: var(--accent); }
+    .nav-meta { font-family: var(--mono); font-size: 11px; color: var(--text-3); background: var(--bg-card2); padding: 4px 12px; border-radius: 99px; border: 1px solid var(--border); }
+    .live-pill { display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--green-bg); border: 1px solid rgba(22,160,96,0.2); border-radius: 99px; color: var(--green); font-size: 11px; font-weight: 500; }
     .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: blink 2s ease-in-out infinite; }
-    .clock-badge { font-family: var(--mono); font-size: 12px; color: var(--text-2); padding: 4px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 99px; }
+    .clock-badge { font-family: var(--mono); font-size: 12px; color: var(--text-2); padding: 5px 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 99px; box-shadow: var(--shadow); }
 
-    /* HERO SECTION — centered */
-    .hero { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 28px 32px; gap: 32px; }
+    /* HERO */
+    .hero { display: flex; align-items: stretch; gap: 0; padding: 28px; }
+    .hero-left { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; background: var(--bg-card); border-radius: var(--r); border: 1px solid var(--border); padding: 40px 32px; box-shadow: var(--shadow); }
+    .hero-right { width: 260px; margin-left: 16px; display: flex; flex-direction: column; gap: 12px; }
 
-    /* STATUS LABEL ABOVE */
-    .hero-label { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-3); }
+    .hero-label { font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-3); }
 
-    /* BIG POWER BUTTON */
-    .power-ring { position: relative; width: 180px; height: 180px; display: flex; align-items: center; justify-content: center; }
-    .power-ring::before, .power-ring::after {
-      content: ''; position: absolute; border-radius: 50%; transition: all .6s ease;
-    }
-    .power-ring::before { inset: 0; border: 1.5px solid var(--border); }
-    .power-ring::after  { inset: 14px; border: 1.5px dashed rgba(255,255,255,.04); animation: spinSlow 20s linear infinite; }
-    .power-ring.on::before { border-color: rgba(52,211,153,.35); box-shadow: 0 0 40px rgba(52,211,153,.08); }
-
+    /* POWER BUTTON — square style */
+    .power-ring { position: relative; width: 160px; height: 160px; display: flex; align-items: center; justify-content: center; }
     .power-btn {
-      width: 120px; height: 120px; border-radius: 50%; cursor: pointer;
-      background: var(--bg-card2); border: 1.5px solid var(--border-hi);
+      width: 120px; height: 120px; border-radius: 24px; cursor: pointer;
+      background: var(--bg-card2); border: 2px solid var(--border-hi);
       display: flex; align-items: center; justify-content: center;
-      transition: all .4s cubic-bezier(.4,0,.2,1);
-      position: relative; z-index: 2;
-      box-shadow: 0 2px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
+      transition: all .3s cubic-bezier(.4,0,.2,1);
+      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.8);
     }
-    .power-btn:hover { transform: scale(1.04); border-color: var(--border-hi); }
+    .power-btn:hover { transform: scale(1.03); box-shadow: 0 8px 24px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,.8); }
     .power-btn:active { transform: scale(.97); }
-    .power-btn.on { background: rgba(52,211,153,.06); border-color: rgba(52,211,153,.45); box-shadow: 0 0 40px rgba(52,211,153,.18), 0 2px 20px rgba(0,0,0,.4), inset 0 1px 0 rgba(52,211,153,.08); }
-    .power-btn svg { width: 36px; height: 36px; stroke: var(--text-3); fill: none; stroke-width: 1.8; stroke-linecap: round; transition: stroke .4s, filter .4s; }
-    .power-btn.on svg { stroke: var(--green); filter: drop-shadow(0 0 8px rgba(52,211,153,.6)); }
+    .power-btn.on { background: var(--green-bg); border-color: rgba(22,160,96,0.4); box-shadow: 0 4px 20px rgba(22,160,96,0.2), var(--shadow-md); }
+    .power-btn svg { width: 38px; height: 38px; stroke: var(--text-3); fill: none; stroke-width: 2; stroke-linecap: round; transition: stroke .3s; }
+    .power-btn.on svg { stroke: var(--green); }
+    /* orbit ring */
+    .orbit { position: absolute; inset: 0; border-radius: 50%; border: 1px dashed var(--border); animation: spinSlow 20s linear infinite; }
+    .orbit.on { border-color: rgba(22,160,96,0.2); }
 
-    /* STATUS TEXT */
     .status-block { text-align: center; }
-    .status-state { font-size: 28px; font-weight: 600; letter-spacing: 1px; transition: color .4s; color: var(--text-3); }
+    .status-state { font-size: 26px; font-weight: 600; letter-spacing: .5px; color: var(--text-3); transition: color .4s; }
     .status-state.on { color: var(--green); }
     .status-sub { font-size: 12px; color: var(--text-2); margin-top: 4px; }
 
-    /* ON / OFF BUTTONS */
-    .ctrl-btns { display: flex; gap: 10px; }
-    .cbtn { padding: 10px 28px; border-radius: var(--r-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all .2s; letter-spacing: .3px; }
+    .ctrl-btns { display: flex; gap: 8px; }
+    .cbtn { padding: 9px 24px; border-radius: var(--r-sm); font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all .2s; letter-spacing: .2px; }
     .cbtn:hover { transform: translateY(-1px); }
-    .cbtn-on  { background: var(--green-dim); color: var(--green); border-color: rgba(52,211,153,.25); }
-    .cbtn-on:hover  { background: rgba(52,211,153,.2); }
-    .cbtn-off { background: rgba(248,113,113,.07); color: var(--red); border-color: rgba(248,113,113,.2); }
-    .cbtn-off:hover { background: rgba(248,113,113,.14); }
+    .cbtn-on  { background: var(--green-bg); color: var(--green); border-color: rgba(22,160,96,0.25); }
+    .cbtn-on:hover  { background: rgba(22,160,96,0.18); }
+    .cbtn-off { background: var(--red-bg); color: var(--red); border-color: rgba(217,64,64,0.2); }
+    .cbtn-off:hover { background: rgba(217,64,64,0.14); }
 
-    /* OUTPUT BAR */
-    .output-bar-wrap { width: 260px; display: flex; flex-direction: column; gap: 6px; }
+    .output-bar-wrap { width: 220px; display: flex; flex-direction: column; gap: 6px; }
     .ob-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-3); }
     .ob-labels span:last-child { font-family: var(--mono); }
-    .ob-track { height: 4px; background: var(--bg-card2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
+    .ob-track { height: 5px; background: var(--bg-card2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
     .ob-fill { height: 100%; width: 15%; border-radius: 99px; background: var(--text-3); transition: width .8s cubic-bezier(.4,0,.2,1), background .4s; }
     .ob-fill.on { width: 85%; background: linear-gradient(to right, var(--accent), var(--green)); }
 
+    /* HERO RIGHT — stat mini-cards */
+    .stat-mini { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px 16px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .stat-mini-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 1px; }
+    .stat-mini-val { font-family: var(--mono); font-size: 20px; font-weight: 500; color: var(--text); }
+    .stat-mini-sub { font-size: 10px; color: var(--text-2); }
+
     /* DIVIDER */
-    .divider { width: 100%; border: none; border-top: 1px solid var(--border); }
+    .divider { border: none; border-top: 1px solid var(--border); }
 
     /* BOTTOM GRID */
     .bottom-grid {
@@ -122,32 +119,32 @@
       gap: 12px;
       padding: 0 28px 28px;
     }
-    @media (max-width: 900px) { .bottom-grid { grid-template-columns: 1fr 1fr; } }
-    @media (max-width: 550px) { .bottom-grid { grid-template-columns: 1fr; } nav { padding: 12px 16px; } .hero { padding: 32px 16px 24px; } .bottom-grid { padding: 0 16px 20px; } }
+    @media (max-width: 900px) { .bottom-grid { grid-template-columns: 1fr 1fr; } .hero { flex-direction: column; } .hero-right { width: 100%; margin-left: 0; flex-direction: row; flex-wrap: wrap; } .stat-mini { min-width: 120px; } }
+    @media (max-width: 550px) { .bottom-grid { grid-template-columns: 1fr; } nav { padding: 12px 16px; } .hero { padding: 16px; } .bottom-grid { padding: 0 16px 20px; } }
 
     /* CARD */
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 14px; }
-    .card-title { font-size: 11px; font-weight: 500; color: var(--text-3); letter-spacing: 1.5px; text-transform: uppercase; display: flex; align-items: center; gap: 7px; }
-    .card-title-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow); }
+    .card-title { font-size: 11px; font-weight: 600; color: var(--text-2); letter-spacing: 1px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+    .card-title-bar { width: 3px; height: 12px; border-radius: 99px; background: var(--accent); flex-shrink: 0; }
 
-    /* METRICS CARD */
-    .metric-list { display: flex; flex-direction: column; gap: 6px; }
-    .metric-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--bg-card2); border-radius: var(--r-sm); }
+    /* METRICS */
+    .metric-list { display: flex; flex-direction: column; gap: 5px; }
+    .metric-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: var(--bg-card2); border-radius: var(--r-sm); border: 1px solid var(--border); }
     .metric-k { font-size: 12px; color: var(--text-2); }
-    .metric-v { font-family: var(--mono); font-size: 13px; color: var(--text); }
+    .metric-v { font-family: var(--mono); font-size: 12px; color: var(--text); }
 
-    /* NETWORK CARD */
-    .net-list { display: flex; flex-direction: column; gap: 7px; }
-    .net-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; background: var(--bg-card2); border-radius: var(--r-sm); }
+    /* NETWORK */
+    .net-list { display: flex; flex-direction: column; gap: 6px; }
+    .net-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; background: var(--bg-card2); border-radius: var(--r-sm); border: 1px solid var(--border); }
     .ndot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; transition: all .4s; }
-    .ndot.live { background: var(--green); box-shadow: 0 0 6px rgba(52,211,153,.5); animation: blink 2s ease-in-out infinite; }
+    .ndot.live { background: var(--green); animation: blink 2s ease-in-out infinite; }
     .ndot.err  { background: var(--red); }
     .net-info { flex: 1; }
     .net-name { font-size: 12px; font-weight: 500; color: var(--text); }
     .net-sub  { font-size: 10px; color: var(--text-3); margin-top: 2px; }
     .net-badge { font-family: var(--mono); font-size: 10px; padding: 2px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 99px; color: var(--text-3); }
 
-    /* DONUT CARD */
+    /* DONUT */
     .donut-wrap { display: flex; align-items: center; gap: 18px; }
     .donut-cvs { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
     .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -160,46 +157,40 @@
     .leg-txt { font-size: 11px; color: var(--text-2); flex: 1; }
     .leg-num { font-family: var(--mono); font-size: 11px; color: var(--text); }
 
-    /* LOG CARD */
-    .log-scroll { background: var(--bg-card2); border-radius: var(--r-sm); height: 148px; overflow-y: auto; padding: 10px 12px; }
+    /* LOG */
+    .log-scroll { background: #1a1a22; border-radius: var(--r-sm); height: 148px; overflow-y: auto; padding: 10px 12px; }
     .log-scroll::-webkit-scrollbar { width: 3px; }
-    .log-scroll::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
-    .log-entry { font-family: var(--mono); font-size: 10px; line-height: 1.9; color: var(--text-3); }
+    .log-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 99px; }
+    .log-entry { font-family: var(--mono); font-size: 10px; line-height: 1.9; color: rgba(255,255,255,.3); }
     .log-entry .ts { opacity: .5; margin-right: 6px; }
-    .log-entry.ok  { color: var(--green); }
-    .log-entry.err { color: var(--red); }
+    .log-entry.ok  { color: #4ade80; }
+    .log-entry.err { color: #f87171; }
 
-    /* SPARK CARD */
+    /* SPARK */
     .spark-wrap { width: 100%; height: 80px; position: relative; }
 
-    /* SIGNAL CARD */
+    /* SIGNAL */
     .signal-bars { display: flex; align-items: flex-end; gap: 5px; height: 36px; justify-content: center; }
-    .s-bar { width: 10px; border-radius: 2px 2px 0 0; background: var(--text-3); transition: background .4s, box-shadow .4s; }
+    .s-bar { width: 10px; border-radius: 3px 3px 0 0; background: var(--border-hi); transition: background .4s; }
     .s-bar:nth-child(1){height:20%} .s-bar:nth-child(2){height:38%} .s-bar:nth-child(3){height:58%} .s-bar:nth-child(4){height:78%} .s-bar:nth-child(5){height:100%}
-    .signal-bars.active .s-bar { background: var(--accent2); box-shadow: 0 0 6px rgba(167,139,250,.35); }
+    .signal-bars.active .s-bar { background: var(--accent); }
     .sig-label-text { text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: 1px; color: var(--text-3); margin-top: 8px; }
-    .sig-label-text.active { color: var(--accent2); }
+    .sig-label-text.active { color: var(--accent); }
 
-    /* RANK CARD */
+    /* RANK */
     .rank-list { display: flex; flex-direction: column; gap: 10px; }
     .rank-item { display: flex; flex-direction: column; gap: 5px; }
     .rank-header { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-2); }
     .rank-val { font-family: var(--mono); color: var(--text); }
-    .rank-track { height: 3px; background: var(--bg-card2); border-radius: 99px; overflow: hidden; }
+    .rank-track { height: 4px; background: var(--bg-card2); border-radius: 99px; overflow: hidden; border: 1px solid var(--border); }
     .rank-fill { height: 100%; border-radius: 99px; background: linear-gradient(to right, var(--accent), var(--accent2)); transition: width .6s ease; }
 
-    /* DEVICE INFO CARD */
+    /* DEVICE */
     .device-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-    .tag { padding: 5px 12px; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 99px; font-size: 11px; color: var(--text-2); font-family: var(--mono); }
-
-    /* UPTIME RING */
-    .uptime-wrap { display: flex; align-items: center; gap: 14px; }
-    .uptime-ring-svg { width: 60px; height: 60px; flex-shrink: 0; }
-    .uptime-val { font-size: 11px; font-family: var(--mono); color: var(--text); }
-    .uptime-lbl { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+    .tag { padding: 4px 10px; background: var(--bg-card2); border: 1px solid var(--border); border-radius: 99px; font-size: 11px; color: var(--text-2); font-family: var(--mono); }
 
     /* FOOTER */
-    footer { padding: 12px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+    footer { padding: 12px 28px; border-top: 1px solid var(--border); background: var(--bg-card); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 
     @keyframes fadeIn   { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: none; } }
     @keyframes blink    { 0%,100%{opacity:1} 50%{opacity:.3} }
@@ -222,41 +213,69 @@
   <!-- NAV -->
   <nav>
     <div class="nav-logo">
-      <div class="nav-logo-dot"></div>
+      <div class="nav-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+      </div>
       <div class="nav-logo-text">CONTROL<span>LED</span></div>
     </div>
-    <div class="nav-meta">
-      ESP32 · Supabase · 3s poll
-    </div>
+    <div class="nav-meta">ESP32 · Supabase · 3s poll</div>
     <div style="display:flex;align-items:center;gap:8px;">
       <div class="live-pill"><div class="live-dot"></div>Live</div>
       <div class="clock-badge" id="liveClock">00:00:00</div>
     </div>
   </nav>
 
-  <!-- HERO — centered control -->
+  <!-- HERO -->
   <div class="hero">
-    <div class="hero-label" id="heroLabel">Initializing…</div>
+    <!-- LEFT: power control -->
+    <div class="hero-left">
+      <div class="hero-label" id="heroLabel">Initializing…</div>
 
-    <div class="power-ring" id="powerRing">
-      <div class="power-btn" id="powerBtn" onclick="handleToggle()">
-        <svg viewBox="0 0 24 24"><path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+      <div class="power-ring" id="powerRing">
+        <div class="orbit" id="orbitRing"></div>
+        <div class="power-btn" id="powerBtn" onclick="handleToggle()">
+          <svg viewBox="0 0 24 24"><path d="M18.36 6.64A9 9 0 1 1 5.64 6.64"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+        </div>
+      </div>
+
+      <div class="status-block">
+        <div class="status-state" id="statusCode">STANDBY</div>
+        <div class="status-sub" id="statusDetail">Built-in LED node is INACTIVE</div>
+      </div>
+
+      <div class="ctrl-btns">
+        <button class="cbtn cbtn-on"  onclick="setLed(true)">Turn On</button>
+        <button class="cbtn cbtn-off" onclick="setLed(false)">Turn Off</button>
+      </div>
+
+      <div class="output-bar-wrap">
+        <div class="ob-labels"><span>Output level</span><span id="obPct">15%</span></div>
+        <div class="ob-track"><div class="ob-fill" id="obFill"></div></div>
       </div>
     </div>
 
-    <div class="status-block">
-      <div class="status-state" id="statusCode">STANDBY</div>
-      <div class="status-sub" id="statusDetail">Built-in LED node is INACTIVE</div>
-    </div>
-
-    <div class="ctrl-btns">
-      <button class="cbtn cbtn-on"  onclick="setLed(true)">Turn On</button>
-      <button class="cbtn cbtn-off" onclick="setLed(false)">Turn Off</button>
-    </div>
-
-    <div class="output-bar-wrap">
-      <div class="ob-labels"><span>Output level</span><span id="obPct">15%</span></div>
-      <div class="ob-track"><div class="ob-fill" id="obFill"></div></div>
+    <!-- RIGHT: quick stats -->
+    <div class="hero-right">
+      <div class="stat-mini">
+        <div class="stat-mini-label">Total Polls</div>
+        <div class="stat-mini-val" id="statPoll">000</div>
+        <div class="stat-mini-sub">Since session start</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-label">Commands Sent</div>
+        <div class="stat-mini-val" id="statToggle">000</div>
+        <div class="stat-mini-sub">PATCH requests fired</div>
+      </div>
+      <div class="stat-mini">
+        <div class="stat-mini-label">Uptime</div>
+        <div class="stat-mini-val" id="statUptime">0s</div>
+        <div class="stat-mini-sub">Poll interval: 3000ms</div>
+      </div>
+      <div class="stat-mini" style="flex:0;padding:12px 16px;">
+        <div class="stat-mini-label">Sync Status</div>
+        <div style="font-size:11px;color:var(--text-2);font-family:var(--mono);margin-top:4px;" id="syncText">Initializing…</div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:2px;" id="lastSync">—</div>
+      </div>
     </div>
   </div>
 
@@ -267,18 +286,18 @@
 
     <!-- 1. Session Metrics -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>Session Metrics</div>
+      <div class="card-title"><div class="card-title-bar"></div>Session Metrics</div>
       <div class="metric-list">
-        <div class="metric-row"><span class="metric-k">Total Polls</span><span class="metric-v" id="statPoll">000</span></div>
-        <div class="metric-row"><span class="metric-k">Commands Sent</span><span class="metric-v" id="statToggle">000</span></div>
-        <div class="metric-row"><span class="metric-k">Uptime</span><span class="metric-v" id="statUptime">0s</span></div>
+        <div class="metric-row"><span class="metric-k">Total Polls</span><span class="metric-v" id="statPoll2">000</span></div>
+        <div class="metric-row"><span class="metric-k">Commands Sent</span><span class="metric-v" id="statToggle2">000</span></div>
+        <div class="metric-row"><span class="metric-k">Uptime</span><span class="metric-v" id="statUptime2">0s</span></div>
         <div class="metric-row"><span class="metric-k">Poll Interval</span><span class="metric-v">3000ms</span></div>
       </div>
     </div>
 
     <!-- 2. Network -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>Network</div>
+      <div class="card-title"><div class="card-title-bar"></div>Network</div>
       <div class="net-list">
         <div class="net-row">
           <div class="ndot" id="dotSupabase"></div>
@@ -294,21 +313,21 @@
             <div class="net-name">Dashboard</div>
             <div class="net-sub">Browser · WebUI</div>
           </div>
-          <div class="net-badge" style="color:var(--green)">LIVE</div>
+          <div class="net-badge" style="color:var(--green);border-color:rgba(22,160,96,.2)">LIVE</div>
         </div>
         <div class="net-row">
           <div class="ndot" id="dotSync"></div>
           <div class="net-info">
             <div class="net-name">Sync Status</div>
-            <div class="net-sub" id="syncText">Initializing…</div>
+            <div class="net-sub" id="syncText2">Initializing…</div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 3. State Distribution (donut) -->
+    <!-- 3. State Distribution -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>State Distribution</div>
+      <div class="card-title"><div class="card-title-bar"></div>State Distribution</div>
       <div class="donut-wrap">
         <div class="donut-cvs">
           <canvas id="donutChart" width="90" height="90"></canvas>
@@ -325,9 +344,9 @@
       </div>
     </div>
 
-    <!-- 4. Poll Activity (spark) -->
+    <!-- 4. Poll Activity -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>Poll Activity</div>
+      <div class="card-title"><div class="card-title-bar"></div>Poll Activity</div>
       <div class="spark-wrap"><canvas id="sparkChart"></canvas></div>
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div>
@@ -343,7 +362,7 @@
 
     <!-- 5. Signal Strength -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>Signal Strength</div>
+      <div class="card-title"><div class="card-title-bar"></div>Signal Strength</div>
       <div style="padding: 8px 0;">
         <div class="signal-bars" id="signalBars">
           <div class="s-bar"></div><div class="s-bar"></div><div class="s-bar"></div><div class="s-bar"></div><div class="s-bar"></div>
@@ -351,13 +370,13 @@
         <div class="sig-label-text" id="sigLabel">NO SIGNAL</div>
       </div>
       <div class="metric-list">
-        <div class="metric-row"><span class="metric-k">Last sync</span><span class="metric-v" id="lastSync" style="font-size:11px">—</span></div>
+        <div class="metric-row"><span class="metric-k">Last sync</span><span class="metric-v" id="lastSync2" style="font-size:11px">—</span></div>
       </div>
     </div>
 
     <!-- 6. Interface Rank -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>Interface Rank</div>
+      <div class="card-title"><div class="card-title-bar"></div>Interface Rank</div>
       <div class="rank-list">
         <div class="rank-item">
           <div class="rank-header"><span>LED Control</span><span class="rank-val">100</span></div>
@@ -380,7 +399,7 @@
 
     <!-- 7. Activity Log -->
     <div class="card" style="grid-column: span 2;">
-      <div class="card-title"><div class="card-title-dot"></div>Activity Log</div>
+      <div class="card-title"><div class="card-title-bar"></div>Activity Log</div>
       <div class="log-scroll">
         <div id="logContainer">
           <div class="log-entry"><span class="ts">[BOOT]</span> EbelenLED dashboard loaded.</div>
@@ -391,7 +410,7 @@
 
     <!-- 8. Device Info -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>Device Info</div>
+      <div class="card-title"><div class="card-title-bar"></div>Device Info</div>
       <div class="metric-list">
         <div class="metric-row"><span class="metric-k">Device</span><span class="metric-v" style="font-size:11px;color:var(--text-2)">ESP32 DevKit</span></div>
         <div class="metric-row"><span class="metric-k">Backend</span><span class="metric-v" style="font-size:11px;color:var(--text-2)">Supabase</span></div>
@@ -402,7 +421,7 @@
 
     <!-- 9. System Tags -->
     <div class="card">
-      <div class="card-title"><div class="card-title-dot"></div>System Tags</div>
+      <div class="card-title"><div class="card-title-bar"></div>System Tags</div>
       <div class="device-tags">
         <div class="tag">ESP32</div>
         <div class="tag">Supabase</div>
@@ -418,7 +437,7 @@
       </div>
     </div>
 
-  </div><!-- end bottom-grid -->
+  </div>
 
   <footer>
     <span>ESP32 · Supabase · ESP-IDF</span>
@@ -426,11 +445,11 @@
     <span>SEBEN EBELEN</span>
   </footer>
 
-</div><!-- end app -->
+</div>
 
 <script>
-  const SUPABASE_URL = "https://oqeucwpbovszthusqddx.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xZXVjd3Bib3ZzenRodXNxZGR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5Mjk5NjIsImV4cCI6MjA5MDUwNTk2Mn0.MxF9CKcFq-FD-DBAP8AMkg62d8f1G7rl39gzOOvC2qU";
+  const SUPABASE_URL = "https://dncshtxaejjyuwbbrdsl.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRuY3NodHhhZWpqeXV3YmJyZHNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzMzg1MTUsImV4cCI6MjA4OTkxNDUxNX0.EgKQUFll9i7Eyva5K-xJF5QmXUjEXSajArbgSre5hiE";
   const TABLE = "device_control", POLL_MS = 3000;
 
   let currentStatus = false, isUpdating = false;
@@ -438,7 +457,6 @@
   let startTime = Date.now(), sparkData = Array(20).fill(0);
 
   const powerBtn   = document.getElementById('powerBtn');
-  const powerRing  = document.getElementById('powerRing');
   const statusCode = document.getElementById('statusCode');
   const statusDet  = document.getElementById('statusDetail');
   const heroLabel  = document.getElementById('heroLabel');
@@ -447,26 +465,23 @@
   const logCont    = document.getElementById('logContainer');
   const dotSupa    = document.getElementById('dotSupabase');
   const dotSync    = document.getElementById('dotSync');
-  const syncTxt    = document.getElementById('syncText');
   const sigBars    = document.getElementById('signalBars');
   const sigLabel   = document.getElementById('sigLabel');
 
   setInterval(() => { document.getElementById('liveClock').textContent = new Date().toLocaleTimeString('en-US',{hour12:false}); }, 1000);
 
-  // Donut chart
   const donutCtx = document.getElementById('donutChart').getContext('2d');
   const donutChart = new Chart(donutCtx, {
     type: 'doughnut',
-    data: { labels:['Online','Standby','Commands'], datasets:[{ data:[0,1,0], backgroundColor:['#34d399','#3d3c52','#7c6fff'], borderColor:'#111118', borderWidth:3 }] },
+    data: { labels:['Online','Standby','Commands'], datasets:[{ data:[0,1,0], backgroundColor:['#16a060','#b0afc0','#5b4fff'], borderColor:'#ffffff', borderWidth:3 }] },
     options: { cutout:'72%', plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{duration:400} }
   });
 
-  // Spark chart
   const sparkCtx = document.getElementById('sparkChart').getContext('2d');
   const sparkChart = new Chart(sparkCtx, {
     type:'line',
-    data:{ labels: sparkData.map((_,i)=>i), datasets:[{ data:sparkData, fill:true, borderColor:'#7c6fff', borderWidth:1.5,
-      backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,80); g.addColorStop(0,'rgba(124,111,255,.2)'); g.addColorStop(1,'rgba(124,111,255,0)'); return g; },
+    data:{ labels: sparkData.map((_,i)=>i), datasets:[{ data:sparkData, fill:true, borderColor:'#5b4fff', borderWidth:1.5,
+      backgroundColor:(ctx)=>{ const g=ctx.chart.ctx.createLinearGradient(0,0,0,80); g.addColorStop(0,'rgba(91,79,255,.15)'); g.addColorStop(1,'rgba(91,79,255,0)'); return g; },
       tension:.45, pointRadius:0 }]
     },
     options:{ responsive:true, maintainAspectRatio:false, scales:{x:{display:false},y:{display:false,min:0,max:5}}, plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{duration:350} }
@@ -481,6 +496,15 @@
     logCont.appendChild(el);
     logCont.parentElement.scrollTop = logCont.parentElement.scrollHeight;
     while (logCont.children.length > 40) logCont.removeChild(logCont.firstChild);
+  }
+
+  function syncText(val) {
+    document.getElementById('syncText').textContent = val;
+    document.getElementById('syncText2').textContent = val;
+  }
+  function syncLastSync(val) {
+    document.getElementById('lastSync').textContent = val;
+    document.getElementById('lastSync2').textContent = val;
   }
 
   function updateCharts() {
@@ -505,7 +529,8 @@
     currentStatus = status;
     if (status) {
       onCount++;
-      powerBtn.classList.add('on'); powerRing.classList.add('on');
+      powerBtn.classList.add('on');
+      document.getElementById('orbitRing').classList.add('on');
       statusCode.textContent = 'ONLINE'; statusCode.className = 'status-state on';
       statusDet.textContent = 'Built-in LED node is ACTIVE';
       heroLabel.textContent = 'Press to toggle · Currently ON';
@@ -515,7 +540,8 @@
       document.getElementById('footerStatus').style.color = 'var(--green)';
     } else {
       offCount++;
-      powerBtn.classList.remove('on'); powerRing.classList.remove('on');
+      powerBtn.classList.remove('on');
+      document.getElementById('orbitRing').classList.remove('on');
       statusCode.textContent = 'STANDBY'; statusCode.className = 'status-state';
       statusDet.textContent = 'Built-in LED node is INACTIVE';
       heroLabel.textContent = 'Press to toggle · Currently OFF';
@@ -528,14 +554,20 @@
   }
 
   function updateStats() {
-    document.getElementById('statPoll').textContent   = String(pollCount).padStart(3, '0');
-    document.getElementById('statToggle').textContent = String(toggleCount).padStart(3, '0');
+    const val1 = String(pollCount).padStart(3, '0');
+    const val2 = String(toggleCount).padStart(3, '0');
+    document.getElementById('statPoll').textContent    = val1;
+    document.getElementById('statPoll2').textContent   = val1;
+    document.getElementById('statToggle').textContent  = val2;
+    document.getElementById('statToggle2').textContent = val2;
     const e = Math.floor((Date.now() - startTime) / 1000);
-    document.getElementById('statUptime').textContent = e >= 60 ? `${Math.floor(e/60)}m ${e%60}s` : `${e}s`;
+    const uv = e >= 60 ? `${Math.floor(e/60)}m ${e%60}s` : `${e}s`;
+    document.getElementById('statUptime').textContent  = uv;
+    document.getElementById('statUptime2').textContent = uv;
   }
 
   async function fetchStatus() {
-    dotSync.className = 'ndot'; syncTxt.textContent = 'Polling…';
+    dotSync.className = 'ndot'; syncText('Polling…');
     try {
       const r = await fetch(`${SUPABASE_URL}/rest/v1/${TABLE}?id=eq.1&select=led_status`, { headers: hdrs() });
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -544,13 +576,13 @@
       dotSupa.className = 'ndot live';
       document.getElementById('supaStatus').textContent = 'OK';
       document.getElementById('supaStatus').style.color = 'var(--green)';
-      dotSync.className = 'ndot live'; syncTxt.textContent = `Synced ${ts()}`;
-      document.getElementById('lastSync').textContent = ts();
+      dotSync.className = 'ndot live'; syncText(`Synced ${ts()}`);
+      syncLastSync(ts());
     } catch (e) {
       dotSync.className = 'ndot err'; dotSupa.className = 'ndot err';
       document.getElementById('supaStatus').textContent = 'ERR';
       document.getElementById('supaStatus').style.color = 'var(--red)';
-      syncTxt.textContent = 'Connection failed'; addLog(`Fetch failed: ${e.message}`, 'err');
+      syncText('Connection failed'); addLog(`Fetch failed: ${e.message}`, 'err');
     }
   }
 
